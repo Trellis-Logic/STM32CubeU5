@@ -17,7 +17,7 @@ ser = serial.Serial(
     port,
     baudrate,
     timeout=2,
-    rtscts=False,  # RTS/CTS flow control on (CTS will be used)
+    rtscts=True,  # RTS/CTS flow control on (CTS will be used)
 )
 # Clear input buffer
 ser.reset_input_buffer()
