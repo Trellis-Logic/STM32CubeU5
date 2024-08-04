@@ -51,6 +51,7 @@ UART_HandleTypeDef huart2;
 __IO ITStatus UartReady = RESET;
 __IO uint32_t UserButtonStatus = 0;  /* set to 1 after User Button interrupt  */
 __IO uint32_t ByteCount = 0;
+__IO uint32_t TransferCount = 0;
 
 /* Buffer used for transmission */
 uint8_t aTxBuffer[] = " ****UART_TwoBoards_ComIT****  ****UART_TwoBoards_ComIT****  ****UART_TwoBoards_ComIT**** ";
@@ -62,6 +63,7 @@ uint8_t aRxBuffer[RXBUFFERSIZE];
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+void AssertRTS(int assert);
 static void SystemPower_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_ICACHE_Init(void);
@@ -163,7 +165,9 @@ int main(void)
   /* The board receives the message and sends it back */
 
   int led_on = 0;
+  int prev_iteration_received_data = 0;
   while(1) {
+
 	  if ( led_on )
 	  {
 		  BSP_LED_Off(LED2);
@@ -178,13 +182,20 @@ int main(void)
 	  {
 		Error_Handler();
 	  }
+	  AssertRTS(1);
 	  while (huart2.RxState != HAL_UART_STATE_READY)
 	  {
+		  if ( prev_iteration_received_data )
+		  {
+			  HAL_Delay(TransferCount%15); // simulate a 1-14ms processing delay every buffer of received data
+			  prev_iteration_received_data = 0;
+		  }
 	  }
 	  ByteCount += huart2.RxXferSize - huart2.RxXferCount;
 	  if ( ByteCount > 0 )
 	  {
-		  HAL_Delay(1); // simulate a 1ms processing delay every buffer
+		  prev_iteration_received_data = 1;
+		  TransferCount ++;
 	  }
   };
 
@@ -360,6 +371,18 @@ static void MX_ICACHE_Init(void)
 
 }
 
+void AssertRTS(int assert)
+{
+	if (assert)
+	{
+		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_4, GPIO_PIN_RESET);
+	}
+	else
+	{
+		HAL_GPIO_WritePin(GPIOD, GPIO_PIN_4, GPIO_PIN_SET);
+	}
+}
+
 /**
   * @brief USART2 Initialization Function
   * @param None
@@ -381,7 +404,7 @@ static void MX_USART2_UART_Init(void)
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
   huart2.Init.Mode = UART_MODE_TX_RX;
-  huart2.Init.HwFlowCtl = UART_HWCONTROL_RTS_CTS;
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
   huart2.Init.OverSampling = UART_OVERSAMPLING_16;
   huart2.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
   huart2.Init.ClockPrescaler = UART_PRESCALER_DIV1;
@@ -398,7 +421,7 @@ static void MX_USART2_UART_Init(void)
   {
     Error_Handler();
   }
-  if (HAL_UARTEx_DisableFifoMode(&huart2) != HAL_OK)
+  if (HAL_UARTEx_EnableFifoMode(&huart2) != HAL_OK)
   {
     Error_Handler();
   }
@@ -420,6 +443,13 @@ static void MX_GPIO_Init(void)
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOD_CLK_ENABLE();
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  GPIO_InitStruct.Pin = GPIO_PIN_4;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
@@ -437,7 +467,6 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle)
 {
   /* Set transmission flag: transfer complete */
   UartReady = SET;
-
 }
 
 /**
@@ -447,11 +476,11 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle)
   *         you can add your own implementation.
   * @retval None
   */
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
+void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size)
 {
   /* Set transmission flag: transfer complete */
   UartReady = SET;
-
+  AssertRTS(0);
 }
 
 /**

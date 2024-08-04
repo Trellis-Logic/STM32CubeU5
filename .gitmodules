@@ -1,7 +1,7 @@
 [submodule "Drivers/STM32U5xx_HAL_Driver"]
 	path = Drivers/STM32U5xx_HAL_Driver
-	url = https://github.com/STMicroelectronics/stm32u5xx_hal_driver.git
-	branch = main
+	url = https://github.com/Trellis-Logic/stm32u5xx_hal_driver.git
+	branch = flow-control-hack
 [submodule "Drivers/CMSIS/Device/ST/STM32U5xx"]
 	path = Drivers/CMSIS/Device/ST/STM32U5xx
 	url = https://github.com/STMicroelectronics/cmsis_device_u5.git

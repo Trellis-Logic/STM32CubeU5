@@ -62,7 +62,7 @@ void Error_Handler(void);
 /* Size of Transmission buffer */
 #define TXBUFFERSIZE                      (COUNTOF(aTxBuffer) - 1)
 /* Size of Reception buffer */
-#define RXBUFFERSIZE                      TXBUFFERSIZE
+#define RXBUFFERSIZE                      1024
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
