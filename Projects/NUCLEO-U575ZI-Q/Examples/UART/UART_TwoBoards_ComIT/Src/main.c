@@ -34,7 +34,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define TRANSMITTER_BOARD
+//#define TRANSMITTER_BOARD
+#define SEND_BACK 0
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -49,6 +50,7 @@ UART_HandleTypeDef huart2;
 /* USER CODE BEGIN PV */
 __IO ITStatus UartReady = RESET;
 __IO uint32_t UserButtonStatus = 0;  /* set to 1 after User Button interrupt  */
+__IO uint32_t ByteCount = 0;
 
 /* Buffer used for transmission */
 uint8_t aTxBuffer[] = " ****UART_TwoBoards_ComIT****  ****UART_TwoBoards_ComIT****  ****UART_TwoBoards_ComIT**** ";
@@ -160,12 +162,29 @@ int main(void)
 
   /* The board receives the message and sends it back */
 
-  /*##-1- Put UART peripheral in reception process ###########################*/
-  if (HAL_UART_Receive_IT(&huart2, (uint8_t *)aRxBuffer, RXBUFFERSIZE) != HAL_OK)
-  {
-    Error_Handler();
-  }
+  int led_on = 0;
+  while(1) {
+	  if ( led_on )
+	  {
+		  BSP_LED_Off(LED2);
+	  }
+	  else
+	  {
+		  BSP_LED_On(LED2);
+	  }
+	  led_on = !led_on;
+	  /*##-1- Put UART peripheral in reception process ###########################*/
+	  if (HAL_UART_Receive_IT(&huart2, (uint8_t *)aRxBuffer, RXBUFFERSIZE) != HAL_OK)
+	  {
+		Error_Handler();
+	  }
+	  while (huart2.RxState != HAL_UART_STATE_READY)
+	  {
+	  }
+	  ByteCount += RXBUFFERSIZE;
+  };
 
+ #if SEND_BACK
   /*##-2- Wait for the end of the transfer ###################################*/
   /* While waiting for message to come from the other board, LED2 is
      blinking according to the following pattern: a double flash every half-second */
@@ -193,7 +212,6 @@ int main(void)
     Error_Handler();
   }
 
-#endif /* TRANSMITTER_BOARD */
 
   /*##-4- Wait for the end of the transfer ###################################*/
   while (UartReady != SET)
@@ -224,6 +242,9 @@ int main(void)
 
   }
   /* USER CODE END 3 */
+#else
+#endif /* TRANSMITTER_BOARD */
+#endif /* SEND_BACK */
 }
 
 /**
