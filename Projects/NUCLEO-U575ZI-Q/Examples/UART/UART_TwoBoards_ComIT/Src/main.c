@@ -174,14 +174,14 @@ int main(void)
 	  }
 	  led_on = !led_on;
 	  /*##-1- Put UART peripheral in reception process ###########################*/
-	  if (HAL_UART_Receive_IT(&huart2, (uint8_t *)aRxBuffer, RXBUFFERSIZE) != HAL_OK)
+	  if (HAL_UARTEx_ReceiveToIdle_IT(&huart2, (uint8_t *)aRxBuffer, RXBUFFERSIZE) != HAL_OK)
 	  {
 		Error_Handler();
 	  }
 	  while (huart2.RxState != HAL_UART_STATE_READY)
 	  {
 	  }
-	  ByteCount += RXBUFFERSIZE;
+	  ByteCount += huart2.RxXferSize - huart2.RxXferCount;
   };
 
  #if SEND_BACK
