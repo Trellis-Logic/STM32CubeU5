@@ -182,6 +182,10 @@ int main(void)
 	  {
 	  }
 	  ByteCount += huart2.RxXferSize - huart2.RxXferCount;
+	  if ( ByteCount > 0 )
+	  {
+		  HAL_Delay(1); // simulate a 1ms processing delay every buffer
+	  }
   };
 
  #if SEND_BACK
