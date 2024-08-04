@@ -3,6 +3,7 @@ import time
 import os
 import threading
 import sys
+import time
 
 # Serial port settings
 port = "COM4"    # Serial port to use
@@ -38,8 +39,14 @@ def send_file(ser, file_path):
             ser.write(chunk)
             bytes_sent += len(chunk)
 
+start=time.monotonic()
 # Send the file
 send_file(ser, file_path)
-print(f"Sent {bytes_sent} bytes")
+end=time.monotonic()
+duration=end-start
+transfer_rate = 0
+if duration:
+    transfer_rate=(bytes_sent/1000)/duration
+print(f"Sent {bytes_sent} bytes in {duration} sections (start={start} end={end}), transfer rate {transfer_rate} KB/s")
 # Signal the reading thread to stop and wait for it to finish
 ser.close()
