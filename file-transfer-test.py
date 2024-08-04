@@ -6,8 +6,8 @@ import sys
 
 # Serial port settings
 port = "COM4"    # Serial port to use
-#baudrate = 921600  # Baud rate
-baudrate = 9600  # Baud rate
+baudrate = 921600  # Baud rate
+#baudrate = 9600  # Baud rate
 # File to send
 file_path = sys.argv[1]
 
